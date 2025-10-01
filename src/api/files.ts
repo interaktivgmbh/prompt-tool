@@ -8,7 +8,6 @@ import { validateDomainId, type DomainRequest } from '@/middleware/domain-valida
 import { getNextCloudStorage } from '@/services/nextcloud-storage';
 import { EmbeddingService } from '@/services/embedding-service';
 import { ContentExtractor } from '@/services/content-extractor';
-import { promptIdSchema } from '@/schemas/api-schemas';
 
 export const filesRouter = Router();
 
@@ -33,7 +32,7 @@ filesRouter.post(
   upload.array('files', 10), // Max 10 files per request
   asyncHandler(async (req, res) => {
     const { domainId } = req as DomainRequest;
-    const { promptId } = promptIdSchema.parse(req.params);
+    const promptId = req.params.promptId!;
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
@@ -56,11 +55,7 @@ filesRouter.post(
 
     for (const file of files) {
       // Generate NextCloud path
-      const nextcloudPath = storage.generateFilePath(
-        domainId,
-        promptId,
-        file.originalname
-      );
+      const nextcloudPath = storage.generateFilePath(domainId, promptId, file.originalname);
 
       // Upload to NextCloud
       await storage.uploadFile({
@@ -87,10 +82,8 @@ filesRouter.post(
       uploadedFiles.push(fileRecord);
     }
 
-    // Trigger reindexing in background
-    embeddingService
-      .reindexPrompt(domainId, promptId)
-      .catch((err) => console.error('Failed to reindex after file upload:', err));
+    // Reindex synchronously after file upload
+    await embeddingService.reindexPrompt(domainId, promptId);
 
     res.status(201).json({
       promptId,
@@ -105,7 +98,7 @@ filesRouter.get(
   '/:promptId/files',
   asyncHandler(async (req, res) => {
     const { domainId } = req as DomainRequest;
-    const { promptId } = promptIdSchema.parse(req.params);
+    const promptId = req.params.promptId!;
 
     // Check if prompt exists
     const [prompt] = await db
@@ -119,10 +112,7 @@ filesRouter.get(
     }
 
     // Get all files for the prompt
-    const files = await db
-      .select()
-      .from(promptFiles)
-      .where(eq(promptFiles.promptId, promptId));
+    const files = await db.select().from(promptFiles).where(eq(promptFiles.promptId, promptId));
 
     res.json({
       promptId,
@@ -137,8 +127,8 @@ filesRouter.get(
   '/:promptId/files/:fileId/download',
   asyncHandler(async (req, res) => {
     const { domainId } = req as DomainRequest;
-    const { promptId } = req.params;
-    const { fileId } = req.params;
+    const promptId = req.params.promptId!;
+    const fileId = req.params.fileId!;
 
     // Get file metadata
     const [file] = await db
@@ -174,8 +164,8 @@ filesRouter.get(
   '/:promptId/files/:fileId/content',
   asyncHandler(async (req, res) => {
     const { domainId } = req as DomainRequest;
-    const { promptId } = req.params;
-    const { fileId } = req.params;
+    const promptId = req.params.promptId!;
+    const fileId = req.params.fileId!;
 
     // Get file metadata
     const [file] = await db
@@ -215,8 +205,8 @@ filesRouter.delete(
   '/:promptId/files/:fileId',
   asyncHandler(async (req, res) => {
     const { domainId } = req as DomainRequest;
-    const { promptId } = req.params;
-    const { fileId } = req.params;
+    const promptId = req.params.promptId!;
+    const fileId = req.params.fileId!;
 
     // Get file metadata
     const [file] = await db
@@ -241,10 +231,8 @@ filesRouter.delete(
     // Delete from database (will cascade to embeddings)
     await db.delete(promptFiles).where(eq(promptFiles.id, fileId));
 
-    // Trigger reindexing in background
-    embeddingService
-      .reindexPrompt(domainId, promptId)
-      .catch((err) => console.error('Failed to reindex after file deletion:', err));
+    // Reindex synchronously after file deletion
+    await embeddingService.reindexPrompt(domainId, promptId);
 
     res.status(204).send();
   })

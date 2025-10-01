@@ -16,11 +16,14 @@ export function createApp() {
 
   // Request logging
   app.use((req, _res, next) => {
-    logger.info({
-      method: req.method,
-      url: req.url,
-      domainId: req.headers['x-domain-id'],
-    }, 'Incoming request');
+    logger.info(
+      {
+        method: req.method,
+        url: req.url,
+        domainId: req.headers['x-domain-id'],
+      },
+      'Incoming request'
+    );
     next();
   });
 

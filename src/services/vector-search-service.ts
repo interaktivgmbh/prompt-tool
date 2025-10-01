@@ -58,8 +58,13 @@ export class VectorSearchService {
     const queryEmbedding = await this.generateQueryEmbedding(query);
     const queryVector = this.formatVector(queryEmbedding);
 
+    // Build the where conditions
+    const whereConditions = promptId
+      ? and(eq(embeddings.domainId, domainId), eq(embeddings.promptId, promptId))
+      : eq(embeddings.domainId, domainId);
+
     // Build the query with pgvector cosine distance operator (<=>)
-    let searchQuery = db
+    const results = await db
       .select({
         embeddingId: embeddings.id,
         promptId: embeddings.promptId,
@@ -72,21 +77,9 @@ export class VectorSearchService {
       })
       .from(embeddings)
       .innerJoin(prompts, eq(embeddings.promptId, prompts.id))
-      .where(eq(embeddings.domainId, domainId))
+      .where(whereConditions)
       .orderBy(sql`${embeddings.vector} <=> ${queryVector}`)
       .limit(topK);
-
-    // Add prompt filter if specified
-    if (promptId) {
-      searchQuery = searchQuery.where(
-        and(
-          eq(embeddings.domainId, domainId),
-          eq(embeddings.promptId, promptId)
-        )
-      ) as typeof searchQuery;
-    }
-
-    const results = await searchQuery;
 
     // Filter by minimum similarity
     return results
@@ -155,9 +148,7 @@ export class VectorSearchService {
 
       if (!existing || result.similarityScore > existing.maxSimilarity) {
         const bestChunk =
-          result.text.length > 200
-            ? result.text.substring(0, 200) + '...'
-            : result.text;
+          result.text.length > 200 ? result.text.substring(0, 200) + '...' : result.text;
 
         promptMap.set(result.promptId, {
           promptId: result.promptId,
@@ -190,12 +181,7 @@ export class VectorSearchService {
     query: string,
     maxChunks: number = 3
   ): Promise<string> {
-    const similarChunks = await this.searchWithinPrompt(
-      domainId,
-      promptId,
-      query,
-      maxChunks
-    );
+    const similarChunks = await this.searchWithinPrompt(domainId, promptId, query, maxChunks);
 
     if (similarChunks.length === 0) {
       return '';
@@ -203,8 +189,7 @@ export class VectorSearchService {
 
     // Concatenate the most relevant chunks with similarity scores
     const contextParts = similarChunks.map(
-      (chunk) =>
-        `[Score: ${chunk.similarityScore.toFixed(3)}] ${chunk.text}`
+      (chunk) => `[Score: ${chunk.similarityScore.toFixed(3)}] ${chunk.text}`
     );
 
     return contextParts.join('\n\n');
@@ -229,8 +214,7 @@ export class VectorSearchService {
 
     const uniquePrompts = new Set(results.map((r) => r.promptId)).size;
     const totalLength = results.reduce((sum, r) => sum + r.textLength, 0);
-    const averageLength =
-      results.length > 0 ? totalLength / results.length : 0;
+    const averageLength = results.length > 0 ? totalLength / results.length : 0;
 
     return {
       totalEmbeddings: results.length,

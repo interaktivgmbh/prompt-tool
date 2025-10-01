@@ -75,9 +75,7 @@ export class MockEmbeddingsService {
    * Normalize vector to unit length
    */
   private normalizeVector(vector: number[]): number[] {
-    const magnitude = Math.sqrt(
-      vector.reduce((sum, val) => sum + val * val, 0)
-    );
+    const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
 
     if (magnitude === 0) {
       return vector.map(() => 0);

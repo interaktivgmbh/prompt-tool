@@ -136,13 +136,8 @@ export class EmbeddingService {
   /**
    * Delete all embeddings for a prompt
    */
-  async deleteEmbeddingsForPrompt(
-    domainId: string,
-    promptId: string
-  ): Promise<void> {
-    await db
-      .delete(embeddings)
-      .where(eq(embeddings.promptId, promptId));
+  async deleteEmbeddingsForPrompt(domainId: string, promptId: string): Promise<void> {
+    await db.delete(embeddings).where(eq(embeddings.promptId, promptId));
   }
 
   /**
@@ -153,28 +148,17 @@ export class EmbeddingService {
     await this.deleteEmbeddingsForPrompt(domainId, promptId);
 
     // Get prompt data
-    const [prompt] = await db
-      .select()
-      .from(prompts)
-      .where(eq(prompts.id, promptId))
-      .limit(1);
+    const [prompt] = await db.select().from(prompts).where(eq(prompts.id, promptId)).limit(1);
 
     if (!prompt) {
       throw new Error(`Prompt ${promptId} not found`);
     }
 
     // Process prompt text
-    const chunks = await this.processPromptContent(
-      domainId,
-      promptId,
-      prompt.prompt
-    );
+    const chunks = await this.processPromptContent(domainId, promptId, prompt.prompt);
 
     // Get associated files
-    const files = await db
-      .select()
-      .from(promptFiles)
-      .where(eq(promptFiles.promptId, promptId));
+    const files = await db.select().from(promptFiles).where(eq(promptFiles.promptId, promptId));
 
     // Process each file
     const storage = getNextCloudStorage();
@@ -189,11 +173,7 @@ export class EmbeddingService {
         const text = await contentExtractor.extractText(content, file.mimeType);
 
         // Process file content into chunks
-        const fileChunks = await this.processFileContent(
-          file.id,
-          text,
-          file.filename
-        );
+        const fileChunks = await this.processFileContent(file.id, text, file.filename);
 
         chunks.push(...fileChunks);
       } catch (error) {
@@ -215,10 +195,7 @@ export class EmbeddingService {
     totalEmbeddings: number;
     uniquePrompts: number;
   }> {
-    const results = await db
-      .select()
-      .from(embeddings)
-      .where(eq(embeddings.domainId, domainId));
+    const results = await db.select().from(embeddings).where(eq(embeddings.domainId, domainId));
 
     const uniquePrompts = new Set(results.map((r) => r.promptId)).size;
 

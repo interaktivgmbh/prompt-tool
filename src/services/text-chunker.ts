@@ -34,6 +34,9 @@ export class TextChunker {
     }
 
     const [separator, ...remainingSeparators] = separators;
+    if (!separator) {
+      return this.createChunksWithOverlap([text]);
+    }
     const splits = text.split(separator);
 
     // If separator didn't help, try next one
@@ -46,9 +49,7 @@ export class TextChunker {
     let currentChunk = '';
 
     for (const split of splits) {
-      const testChunk = currentChunk
-        ? currentChunk + separator + split
-        : split;
+      const testChunk = currentChunk ? currentChunk + separator + split : split;
 
       if (testChunk.length <= this.chunkSize) {
         currentChunk = testChunk;

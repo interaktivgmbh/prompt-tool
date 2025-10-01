@@ -13,17 +13,12 @@ export class AppError extends Error {
   }
 }
 
-export const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-) => {
+export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   // Zod validation errors
   if (err instanceof ZodError) {
     return res.status(400).json({
       error: 'Validation Error',
-      details: err.errors.map((e) => ({
+      details: err.issues.map((e) => ({
         path: e.path.join('.'),
         message: e.message,
       })),
@@ -37,17 +32,24 @@ export const errorHandler = (
     });
   }
 
-  // Log unexpected errors
-  logger.error({
-    err,
-    url: req.url,
-    method: req.method,
-    body: req.body,
-  }, 'Unexpected error');
+  // Log unexpected errors with full details
+  logger.error(
+    {
+      error: err.message,
+      stack: err.stack,
+      name: err.name,
+      url: req.url,
+      method: req.method,
+      body: req.body,
+      headers: req.headers,
+    },
+    'Unexpected error'
+  );
 
   // Default error response
   return res.status(500).json({
     error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 };
 

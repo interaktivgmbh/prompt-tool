@@ -1,4 +1,4 @@
-import { createClient, WebDAVClient, FileStat } from 'webdav';
+import { createClient, type WebDAVClient, type FileStat } from 'webdav';
 import { createChildLogger } from '@/core/logger';
 
 const logger = createChildLogger('nextcloud-storage');
@@ -17,12 +17,7 @@ export class NextCloudStorage {
   private client: WebDAVClient;
   private basePath: string;
 
-  constructor(
-    url: string,
-    username: string,
-    password: string,
-    basePath: string = '/prompts'
-  ) {
+  constructor(url: string, username: string, password: string, basePath: string = '/prompts') {
     this.basePath = basePath;
 
     // Create WebDAV client
@@ -123,7 +118,7 @@ export class NextCloudStorage {
     const fullPath = this.getFullPath(path);
     try {
       return await this.client.exists(fullPath);
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -176,11 +171,7 @@ export class NextCloudStorage {
   /**
    * Generate a path for storing a file
    */
-  generateFilePath(
-    domainId: string,
-    promptId: string,
-    filename: string
-  ): string {
+  generateFilePath(domainId: string, promptId: string, filename: string): string {
     // Sanitize filename
     const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     return `${domainId}/${promptId}/${sanitized}`;

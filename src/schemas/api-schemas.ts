@@ -5,7 +5,7 @@ export const createPromptSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().optional(),
   prompt: z.string().min(1),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   modelId: z.string().optional(),
   modelProvider: z.string().optional(),
 });
@@ -14,7 +14,7 @@ export const updatePromptSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().optional(),
   prompt: z.string().min(1).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   modelId: z.string().optional(),
   modelProvider: z.string().optional(),
 });
@@ -45,8 +45,8 @@ export const getContextSchema = z.object({
 
 // Query params schemas
 export const listPromptsQuerySchema = z.object({
-  limit: z.string().transform(Number).pipe(z.number().int().min(1).max(100)).optional().default('20'),
-  offset: z.string().transform(Number).pipe(z.number().int().min(0)).optional().default('0'),
+  limit: z.string().transform(Number).pipe(z.number().int().min(1).max(100)).optional().default(20),
+  offset: z.string().transform(Number).pipe(z.number().int().min(0)).optional().default(0),
 });
 
 // Response types

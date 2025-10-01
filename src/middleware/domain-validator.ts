@@ -5,11 +5,7 @@ export interface DomainRequest extends Request {
   domainId: string;
 }
 
-export const validateDomainId = (
-  req: Request,
-  _res: Response,
-  next: NextFunction
-) => {
+export const validateDomainId = (req: Request, _res: Response, next: NextFunction) => {
   const domainId = req.headers['x-domain-id'] as string;
 
   if (!domainId) {
