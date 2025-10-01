@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { createChildLogger } from '@/core/logger';
+import { getDefaultModel, getModelById } from '@/config/models';
 
 const logger = createChildLogger('llm-service');
 
@@ -27,15 +28,24 @@ export class LLMService {
   private defaultModel: string;
 
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Use OpenRouter API
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is required');
+      throw new Error('OPENROUTER_API_KEY environment variable is required');
     }
 
-    this.client = new OpenAI({ apiKey });
-    this.defaultModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    this.client = new OpenAI({
+      apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': 'https://github.com/kyra-prompt-tool',
+        'X-Title': 'Kyra Prompt Tool',
+      },
+    });
 
-    logger.info({ model: this.defaultModel }, 'LLM service initialized');
+    this.defaultModel = getDefaultModel().id;
+
+    logger.info({ model: this.defaultModel }, 'LLM service initialized with OpenRouter');
   }
 
   async generateResponse(request: LLMRequest): Promise<LLMResponse> {
@@ -47,6 +57,12 @@ export class LLMService {
       temperature = 0.7,
       model = this.defaultModel,
     } = request;
+
+    // Validate model exists
+    const modelConfig = getModelById(model);
+    if (!modelConfig) {
+      logger.warn({ model }, 'Unknown model, using default');
+    }
 
     // Build the messages array
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
@@ -73,6 +89,7 @@ export class LLMService {
     logger.info(
       {
         model,
+        provider: modelConfig?.provider,
         messageCount: messages.length,
         maxTokens,
         temperature,
@@ -99,6 +116,8 @@ export class LLMService {
         {
           tokens: usage.total_tokens,
           model: completion.model,
+          promptTokens: usage.prompt_tokens,
+          completionTokens: usage.completion_tokens,
         },
         'LLM response generated'
       );
@@ -113,7 +132,7 @@ export class LLMService {
         model: completion.model,
       };
     } catch (error) {
-      logger.error({ error }, 'Failed to generate LLM response');
+      logger.error({ error, model }, 'Failed to generate LLM response');
       throw error;
     }
   }

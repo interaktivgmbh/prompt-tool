@@ -16,6 +16,7 @@ import { EmbeddingService } from '@/services/embedding-service';
 import { getNextCloudStorage } from '@/services/nextcloud-storage';
 import { ContentExtractor } from '@/services/content-extractor';
 import { ApplyService } from '@/services/apply-service';
+import { AVAILABLE_MODELS } from '@/config/models';
 
 export const promptsRouter = Router();
 
@@ -27,12 +28,20 @@ const upload = multer({
   },
 });
 
-// Apply domain validation to all routes
-promptsRouter.use(validateDomainId);
-
 const embeddingService = new EmbeddingService({ useMock: false });
 const storage = getNextCloudStorage();
 const applyService = new ApplyService({ useMock: false });
+
+// List available models (no domain validation required)
+promptsRouter.get('/models', (_req, res) => {
+  res.json({
+    models: AVAILABLE_MODELS,
+    defaultModel: process.env.DEFAULT_MODEL || 'openai/gpt-4o-mini',
+  });
+});
+
+// Apply domain validation to all other routes
+promptsRouter.use(validateDomainId);
 
 // List prompts
 promptsRouter.get(
