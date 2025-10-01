@@ -2,6 +2,7 @@ import { db } from '@/core/database';
 import { embeddings, prompts, promptFiles, type NewEmbedding } from '@/core/schema';
 import { eq } from 'drizzle-orm';
 import { MockEmbeddingsService } from './mock-embeddings';
+import { OpenAIEmbeddingsService } from './openai-embeddings';
 import { TextChunker } from './text-chunker';
 import { getNextCloudStorage } from './nextcloud-storage';
 import { ContentExtractor } from './content-extractor';
@@ -21,7 +22,8 @@ export interface EmbeddingServiceConfig {
 
 export class EmbeddingService {
   private readonly textChunker: TextChunker;
-  private readonly embeddingsModel: MockEmbeddingsService;
+  private readonly mockEmbeddingsModel: MockEmbeddingsService;
+  private readonly openaiEmbeddingsModel: OpenAIEmbeddingsService | null;
   private readonly useMock: boolean;
 
   constructor(config: EmbeddingServiceConfig = {}) {
@@ -29,14 +31,23 @@ export class EmbeddingService {
       chunkSize = 1000,
       chunkOverlap = 200,
       embeddingDimensions = 3072,
-      useMock = true,
+      useMock = false, // Default to real embeddings
     } = config;
 
     this.textChunker = new TextChunker({ chunkSize, chunkOverlap });
-    this.embeddingsModel = new MockEmbeddingsService({
+    this.mockEmbeddingsModel = new MockEmbeddingsService({
       dimensions: embeddingDimensions,
     });
     this.useMock = useMock;
+
+    // Initialize OpenAI embeddings if not using mock
+    if (!useMock) {
+      this.openaiEmbeddingsModel = new OpenAIEmbeddingsService({
+        dimensions: embeddingDimensions,
+      });
+    } else {
+      this.openaiEmbeddingsModel = null;
+    }
   }
 
   /**
@@ -51,10 +62,14 @@ export class EmbeddingService {
    */
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     if (this.useMock) {
-      return this.embeddingsModel.embedBatch(texts);
+      return this.mockEmbeddingsModel.embedBatch(texts);
     }
-    // TODO: Implement real OpenAI embeddings
-    throw new Error('Real OpenAI embeddings not implemented yet');
+
+    if (!this.openaiEmbeddingsModel) {
+      throw new Error('OpenAI embeddings not initialized');
+    }
+
+    return this.openaiEmbeddingsModel.generateEmbeddings(texts);
   }
 
   /**

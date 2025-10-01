@@ -13,7 +13,7 @@ export const searchRouter = Router();
 // Apply domain validation to all routes
 searchRouter.use(validateDomainId);
 
-const searchService = new VectorSearchService({ useMock: true });
+const searchService = new VectorSearchService({ useMock: false });
 
 // Similarity search across all prompts or within specific prompt
 searchRouter.post(

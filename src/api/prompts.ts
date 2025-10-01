@@ -10,10 +10,12 @@ import {
   updatePromptSchema,
   promptIdSchema,
   listPromptsQuerySchema,
+  applyPromptSchema,
 } from '@/schemas/api-schemas';
 import { EmbeddingService } from '@/services/embedding-service';
 import { getNextCloudStorage } from '@/services/nextcloud-storage';
 import { ContentExtractor } from '@/services/content-extractor';
+import { ApplyService } from '@/services/apply-service';
 
 export const promptsRouter = Router();
 
@@ -28,8 +30,9 @@ const upload = multer({
 // Apply domain validation to all routes
 promptsRouter.use(validateDomainId);
 
-const embeddingService = new EmbeddingService({ useMock: true });
+const embeddingService = new EmbeddingService({ useMock: false });
 const storage = getNextCloudStorage();
+const applyService = new ApplyService({ useMock: false });
 
 // List prompts
 promptsRouter.get(
@@ -214,6 +217,36 @@ promptsRouter.delete(
     await db.delete(prompts).where(eq(prompts.id, id));
 
     res.status(204).send();
+  })
+);
+
+// Apply prompt with LLM
+promptsRouter.post(
+  '/:id/apply',
+  asyncHandler(async (req, res) => {
+    const { domainId } = req as DomainRequest;
+    const { id } = promptIdSchema.parse(req.params);
+    const data = applyPromptSchema.parse(req.body);
+
+    // Get prompt
+    const [prompt] = await db
+      .select()
+      .from(prompts)
+      .where(and(eq(prompts.id, id), eq(prompts.domainId, domainId)))
+      .limit(1);
+
+    if (!prompt) {
+      throw new AppError(404, 'Prompt not found');
+    }
+
+    if (!prompt.prompt) {
+      throw new AppError(400, 'Prompt has no instruction text');
+    }
+
+    // Apply the prompt using LLM + RAG
+    const result = await applyService.applyPrompt(domainId, id, prompt.prompt, prompt.name || 'Untitled', data);
+
+    res.json(result);
   })
 );
 

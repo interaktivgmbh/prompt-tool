@@ -2,6 +2,7 @@ import { db } from '@/core/database';
 import { embeddings, prompts } from '@/core/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import { MockEmbeddingsService } from './mock-embeddings';
+import { OpenAIEmbeddingsService } from './openai-embeddings';
 
 export interface SearchResult {
   embeddingId: string;
@@ -28,16 +29,26 @@ export interface VectorSearchConfig {
 }
 
 export class VectorSearchService {
-  private readonly embeddingsModel: MockEmbeddingsService;
+  private readonly mockEmbeddingsModel: MockEmbeddingsService;
+  private readonly openaiEmbeddingsModel: OpenAIEmbeddingsService | null;
   private readonly useMock: boolean;
 
   constructor(config: VectorSearchConfig = {}) {
-    const { embeddingDimensions = 3072, useMock = true } = config;
+    const { embeddingDimensions = 3072, useMock = false } = config;
 
-    this.embeddingsModel = new MockEmbeddingsService({
+    this.mockEmbeddingsModel = new MockEmbeddingsService({
       dimensions: embeddingDimensions,
     });
     this.useMock = useMock;
+
+    // Initialize OpenAI embeddings if not using mock
+    if (!useMock) {
+      this.openaiEmbeddingsModel = new OpenAIEmbeddingsService({
+        dimensions: embeddingDimensions,
+      });
+    } else {
+      this.openaiEmbeddingsModel = null;
+    }
   }
 
   /**
@@ -228,10 +239,14 @@ export class VectorSearchService {
    */
   private async generateQueryEmbedding(query: string): Promise<number[]> {
     if (this.useMock) {
-      return this.embeddingsModel.embedText(query);
+      return this.mockEmbeddingsModel.embedText(query);
     }
-    // TODO: Implement real OpenAI embeddings
-    throw new Error('Real OpenAI embeddings not implemented yet');
+
+    if (!this.openaiEmbeddingsModel) {
+      throw new Error('OpenAI embeddings not initialized');
+    }
+
+    return this.openaiEmbeddingsModel.generateEmbedding(query);
   }
 
   /**

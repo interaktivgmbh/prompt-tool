@@ -23,7 +23,7 @@ const upload = multer({
 filesRouter.use(validateDomainId);
 
 const storage = getNextCloudStorage();
-const embeddingService = new EmbeddingService({ useMock: true });
+const embeddingService = new EmbeddingService({ useMock: false });
 const contentExtractor = new ContentExtractor();
 
 // Upload files to a prompt

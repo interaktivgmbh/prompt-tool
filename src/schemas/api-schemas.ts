@@ -49,6 +49,18 @@ export const listPromptsQuerySchema = z.object({
   offset: z.string().transform(Number).pipe(z.number().int().min(0)).optional().default(0),
 });
 
+// Apply schemas
+export const applyPromptSchema = z.object({
+  query: z.string().min(1).max(10000),
+  text: z.string().min(1).max(50000),
+  maxTokens: z.number().int().min(1).max(4000).optional().default(1000),
+  temperature: z.number().min(0).max(2).optional().default(0.7),
+  includeContext: z.boolean().optional().default(true),
+  maxContextChunks: z.number().int().min(1).max(20).optional().default(5),
+  minSimilarity: z.number().min(0).max(1).optional().default(0.1),
+  modelOverride: z.string().optional(),
+});
+
 // Response types
 export type CreatePromptRequest = z.infer<typeof createPromptSchema>;
 export type UpdatePromptRequest = z.infer<typeof updatePromptSchema>;
@@ -56,3 +68,4 @@ export type SimilaritySearchRequest = z.infer<typeof similaritySearchSchema>;
 export type RelatedPromptsRequest = z.infer<typeof relatedPromptsSchema>;
 export type GetContextRequest = z.infer<typeof getContextSchema>;
 export type ListPromptsQuery = z.infer<typeof listPromptsQuerySchema>;
+export type ApplyPromptRequest = z.infer<typeof applyPromptSchema>;
