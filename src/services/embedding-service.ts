@@ -1,8 +1,10 @@
 import { db } from '@/core/database';
-import { embeddings, prompts, type NewEmbedding } from '@/core/schema';
+import { embeddings, prompts, promptFiles, type NewEmbedding } from '@/core/schema';
 import { eq } from 'drizzle-orm';
 import { MockEmbeddingsService } from './mock-embeddings';
 import { TextChunker } from './text-chunker';
+import { getNextCloudStorage } from './nextcloud-storage';
+import { ContentExtractor } from './content-extractor';
 
 export interface ProcessedChunk {
   text: string;
@@ -144,7 +146,7 @@ export class EmbeddingService {
   }
 
   /**
-   * Reindex a prompt's content
+   * Reindex a prompt's content including files
    */
   async reindexPrompt(domainId: string, promptId: string): Promise<number> {
     // Delete existing embeddings
@@ -161,12 +163,44 @@ export class EmbeddingService {
       throw new Error(`Prompt ${promptId} not found`);
     }
 
-    // Process content
+    // Process prompt text
     const chunks = await this.processPromptContent(
       domainId,
       promptId,
       prompt.prompt
     );
+
+    // Get associated files
+    const files = await db
+      .select()
+      .from(promptFiles)
+      .where(eq(promptFiles.promptId, promptId));
+
+    // Process each file
+    const storage = getNextCloudStorage();
+    const contentExtractor = new ContentExtractor();
+
+    for (const file of files) {
+      try {
+        // Download file from NextCloud
+        const content = await storage.downloadFile({ path: file.nextcloudPath });
+
+        // Extract text content
+        const text = await contentExtractor.extractText(content, file.mimeType);
+
+        // Process file content into chunks
+        const fileChunks = await this.processFileContent(
+          file.id,
+          text,
+          file.filename
+        );
+
+        chunks.push(...fileChunks);
+      } catch (error) {
+        console.error(`Failed to process file ${file.filename}:`, error);
+        // Continue with other files
+      }
+    }
 
     // Save new embeddings
     await this.saveEmbeddings(domainId, promptId, chunks);

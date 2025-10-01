@@ -5,6 +5,7 @@ import { errorHandler } from '@/middleware/error-handler';
 import { healthRouter } from '@/api/health';
 import { promptsRouter } from '@/api/prompts';
 import { searchRouter } from '@/api/search';
+import { filesRouter } from '@/api/files';
 
 export function createApp() {
   const app = express();
@@ -26,6 +27,7 @@ export function createApp() {
   // Routes
   app.use('/health', healthRouter);
   app.use('/api/prompts', promptsRouter);
+  app.use('/api/prompts', filesRouter); // File operations under prompts
   app.use('/api/search', searchRouter);
 
   // Error handling (must be last)
