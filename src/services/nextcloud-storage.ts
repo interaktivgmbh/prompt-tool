@@ -103,6 +103,13 @@ export class NextCloudStorage {
     const fullPath = this.getFullPath(path);
 
     try {
+      // Check if file exists first
+      const exists = await this.fileExists(path);
+      if (!exists) {
+        logger.warn({ path: fullPath }, 'File does not exist, skipping deletion');
+        return;
+      }
+
       await this.client.deleteFile(fullPath);
       logger.info({ path: fullPath }, 'File deleted successfully');
     } catch (error) {

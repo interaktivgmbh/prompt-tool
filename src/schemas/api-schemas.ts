@@ -45,8 +45,8 @@ export const getContextSchema = z.object({
 
 // Query params schemas
 export const listPromptsQuerySchema = z.object({
-  limit: z.string().transform(Number).pipe(z.number().int().min(1).max(100)).optional().default(20),
-  offset: z.string().transform(Number).pipe(z.number().int().min(0)).optional().default(0),
+  page: z.string().transform(Number).pipe(z.number().int().min(1)).optional().default(1),
+  size: z.string().transform(Number).pipe(z.number().int().min(1).max(100)).optional().default(20),
 });
 
 // Apply schemas

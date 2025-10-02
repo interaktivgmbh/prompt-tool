@@ -54,6 +54,11 @@ filesRouter.post(
     const uploadedFiles = [];
 
     for (const file of files) {
+      // Reject empty files
+      if (file.size === 0) {
+        throw new AppError(400, `File '${file.originalname}' is empty`);
+      }
+
       // Generate NextCloud path
       const nextcloudPath = storage.generateFilePath(domainId, promptId, file.originalname);
 
@@ -122,7 +127,7 @@ filesRouter.get(
   })
 );
 
-// Download file content
+// Download file content with streaming
 filesRouter.get(
   '/:promptId/files/:fileId/download',
   asyncHandler(async (req, res) => {
@@ -150,12 +155,20 @@ filesRouter.get(
     // Download from NextCloud
     const content = await storage.downloadFile({ path: file.nextcloudPath });
 
-    // Set response headers
+    // Set response headers for streaming
     res.setHeader('Content-Type', file.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
-    res.setHeader('Content-Length', file.sizeBytes);
+    res.setHeader('Content-Length', file.sizeBytes.toString());
 
-    res.send(content);
+    // Stream content in chunks (1MB at a time)
+    const chunkSize = 1024 * 1024; // 1MB
+    let offset = 0;
+    while (offset < content.length) {
+      const chunk = content.subarray(offset, offset + chunkSize);
+      res.write(chunk);
+      offset += chunkSize;
+    }
+    res.end();
   })
 );
 
@@ -225,14 +238,25 @@ filesRouter.delete(
       throw new AppError(404, 'File not found');
     }
 
-    // Delete from NextCloud
-    await storage.deleteFile(file.nextcloudPath);
+    // Try to delete from NextCloud (may not exist in storage)
+    try {
+      await storage.deleteFile(file.nextcloudPath);
+    } catch (error) {
+      // Log but continue - file might not exist in storage
+      // This handles cases where storage was manually cleaned or upload failed
+      console.warn(`Failed to delete file from NextCloud, continuing with DB cleanup:`, error);
+    }
 
     // Delete from database (will cascade to embeddings)
     await db.delete(promptFiles).where(eq(promptFiles.id, fileId));
 
     // Reindex synchronously after file deletion
-    await embeddingService.reindexPrompt(domainId, promptId);
+    try {
+      await embeddingService.reindexPrompt(domainId, promptId);
+    } catch (error) {
+      // Log but don't fail - reindexing is best effort
+      console.warn(`Failed to reindex after file deletion:`, error);
+    }
 
     res.status(204).send();
   })

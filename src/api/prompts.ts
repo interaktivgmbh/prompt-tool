@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { db } from '@/core/database';
 import { prompts, promptFiles, type NewPromptFile } from '@/core/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 import { asyncHandler, AppError } from '@/middleware/error-handler';
 import { validateDomainId, type DomainRequest } from '@/middleware/domain-validator';
 import {
@@ -50,18 +50,28 @@ promptsRouter.get(
     const { domainId } = req as DomainRequest;
     const query = listPromptsQuerySchema.parse(req.query);
 
+    const offset = (query.page - 1) * query.size;
+
+    // Get total count
+    const [countResult] = await db
+      .select({ count: count() })
+      .from(prompts)
+      .where(eq(prompts.domainId, domainId));
+
+    // Get paginated results
     const results = await db
       .select()
       .from(prompts)
       .where(eq(prompts.domainId, domainId))
       .orderBy(desc(prompts.createdAt))
-      .limit(parseInt(query.limit as unknown as string))
-      .offset(parseInt(query.offset as unknown as string));
+      .limit(query.size)
+      .offset(offset);
 
     res.json({
       prompts: results,
-      limit: query.limit,
-      offset: query.offset,
+      total: Number(countResult?.count ?? 0),
+      page: query.page,
+      size: query.size,
     });
   })
 );
@@ -253,7 +263,13 @@ promptsRouter.post(
     }
 
     // Apply the prompt using LLM + RAG
-    const result = await applyService.applyPrompt(domainId, id, prompt.prompt, prompt.name || 'Untitled', data);
+    const result = await applyService.applyPrompt(
+      domainId,
+      id,
+      prompt.prompt,
+      prompt.name || 'Untitled',
+      data
+    );
 
     res.json(result);
   })

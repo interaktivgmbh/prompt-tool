@@ -14,6 +14,14 @@ export class AppError extends Error {
 }
 
 export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
+  // JSON parsing errors
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({
+      error: 'Invalid JSON',
+      message: 'Request body contains invalid JSON',
+    });
+  }
+
   // Zod validation errors
   if (err instanceof ZodError) {
     return res.status(400).json({
