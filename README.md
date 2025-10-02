@@ -181,7 +181,3 @@ lsof -ti:3005 | xargs kill -9
 
 **Empty file upload errors**
 - Expected behavior - empty files are rejected with 400 status
-
-## License
-
-MIT
