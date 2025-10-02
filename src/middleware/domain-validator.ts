@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import type { Request, Response, NextFunction } from 'express';
 import { AppError } from './error-handler';
 

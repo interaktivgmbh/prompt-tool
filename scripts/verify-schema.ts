@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import postgres from 'postgres';
 
 const sql = postgres('postgresql://postgres:postgres@localhost:5433/prompt_db');

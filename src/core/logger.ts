@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import pino from 'pino';
 
 const isDevelopment = process.env.NODE_ENV === 'development';

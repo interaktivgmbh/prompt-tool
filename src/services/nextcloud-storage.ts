@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import { createClient, type WebDAVClient, type FileStat } from 'webdav';
 import { createChildLogger } from '@/core/logger';
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import { Router } from 'express';
 import multer from 'multer';
 import { db } from '@/core/database';

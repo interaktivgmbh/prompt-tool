@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 /**
  * Content extractor for different file types
  * Extracts text content from various file formats

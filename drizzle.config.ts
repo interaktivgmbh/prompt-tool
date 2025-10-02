@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({

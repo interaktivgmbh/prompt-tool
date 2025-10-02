@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 /**
  * Mock embeddings service for development and testing
  * Generates deterministic fake embeddings without calling OpenAI API

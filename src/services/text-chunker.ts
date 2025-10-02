@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 /**
  * Text chunking utility for splitting large text into manageable chunks
  * Similar to LangChain's RecursiveCharacterTextSplitter

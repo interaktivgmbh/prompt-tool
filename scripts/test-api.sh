@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2025 Interaktiv GmbH
 
 BASE_URL="http://localhost:3005"
 DOMAIN_ID="test.com"

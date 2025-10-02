@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import { config } from 'dotenv';
 import { createApp } from '@/app';
 import { logger } from '@/core/logger';

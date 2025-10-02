@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import express from 'express';
 import cors from 'cors';
 import { logger } from '@/core/logger';

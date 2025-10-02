@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import { Router } from 'express';
 import { testConnection } from '@/core/database';
 import { asyncHandler } from '@/middleware/error-handler';

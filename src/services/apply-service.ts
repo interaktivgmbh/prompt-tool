@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import { createChildLogger } from '@/core/logger';
 import { LLMService } from './llm-service';
 import { VectorSearchService } from './vector-search-service';

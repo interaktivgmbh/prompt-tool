@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 Interaktiv GmbH
+
 import { db } from '@/core/database';
 import { prompts, type NewPrompt } from '@/core/schema';
 import { eq } from 'drizzle-orm';

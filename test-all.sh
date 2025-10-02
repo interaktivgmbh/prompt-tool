@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2025 Interaktiv GmbH
 
 ################################################################################
 # Comprehensive Test Suite for Prompt Tool API
