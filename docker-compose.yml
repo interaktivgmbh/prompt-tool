@@ -26,7 +26,7 @@ services:
     environment:
       NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER:-admin}
       NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD:-admin123}
-      NEXTCLOUD_TRUSTED_DOMAINS: localhost
+      NEXTCLOUD_TRUSTED_DOMAINS: localhost,prompt-nextcloud
       # Auto-install on first run with SQLite
       SQLITE_DATABASE: nextcloud
       NEXTCLOUD_DATA_DIR: /var/www/html/data

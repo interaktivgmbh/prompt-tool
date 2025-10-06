@@ -1,0 +1,84 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+.pnp.*
+.yarn/*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea
+.vscode
+*.swp
+*.swo
+*.swn
+*.bak
+
+# Test files
+test-all.sh
+coverage
+.nyc_output
+*.test.ts
+*.spec.ts
+
+# Documentation
+README.md
+docs
+*.md
+
+# Docker files (don't copy these into the image)
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+# Build artifacts
+dist
+build
+out
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Development files
+.eslintrc*
+.prettierrc*
+
+# CI/CD
+.gitlab-ci.yml
+.github
+.circleci
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Backups
+*.backup
+*.bak
+*.old
+
+# Lock files (we'll copy bun.lock explicitly)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
