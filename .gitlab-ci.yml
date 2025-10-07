@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2025 Interaktiv GmbH
+
 stages:
   - test
   - docker
@@ -16,9 +19,6 @@ test:
     # - bun test
   only:
     - master
-    - develop
-    - staging
-    - merge_requests
 
 docker_prompt_tool:
   stage: docker
@@ -37,13 +37,7 @@ docker_prompt_tool:
         docker tag "$CI_REGISTRY_IMAGE:$BRANCH_TAG" "$CI_REGISTRY_IMAGE:latest"
         docker push "$CI_REGISTRY_IMAGE:latest"
       fi
-      if [ "$CI_COMMIT_REF_NAME" = "staging" ]; then
-        docker tag "$CI_REGISTRY_IMAGE:$BRANCH_TAG" "$CI_REGISTRY_IMAGE:staging"
-        docker push "$CI_REGISTRY_IMAGE:staging"
-      fi
     - docker push "$CI_REGISTRY_IMAGE:$BRANCH_TAG"
   only:
     - master
-    - develop
-    - staging
     - tags
