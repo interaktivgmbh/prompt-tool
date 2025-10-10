@@ -64,5 +64,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Expose port
 EXPOSE 3005
 
-# Run migrations and start the application
-CMD ["sh", "-c", "bun run db:migrate && bun run src/index.ts"]
+# Push schema changes and start the application
+# Using db:push instead of db:migrate to handle existing tables gracefully
+CMD ["sh", "-c", "bun run db:push --force && bun run src/index.ts"]
