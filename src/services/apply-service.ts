@@ -89,7 +89,7 @@ export class ApplyService {
     const userPrompt = INSTRUCTION_MODIFICATION_TEMPLATE.userPrompt({
       instructionPrompt: promptText,
       userQuery: request.query,
-      textToModify: request.text,
+      textToModify: request.text || '',
       contextSection,
     });
 

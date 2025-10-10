@@ -2,6 +2,9 @@
 // Copyright 2025 Interaktiv GmbH
 
 import { extractText } from 'unpdf';
+import { createChildLogger } from '@/core/logger';
+
+const logger = createChildLogger('content-extractor');
 
 /**
  * Content extractor for different file types
@@ -49,9 +52,7 @@ export class ContentExtractor {
   private async extractPDF(content: Buffer | string): Promise<string> {
     try {
       // Convert string to Buffer if needed
-      const buffer = typeof content === 'string'
-        ? Buffer.from(content, 'binary')
-        : content;
+      const buffer = typeof content === 'string' ? Buffer.from(content, 'binary') : content;
 
       // Convert Buffer to ArrayBuffer for unpdf
       const arrayBuffer = new ArrayBuffer(buffer.length);
@@ -64,26 +65,26 @@ export class ContentExtractor {
       const result = await extractText(arrayBuffer);
 
       // Handle both string and string[] return types
-      const textContent = Array.isArray(result.text)
-        ? result.text.join('\n')
-        : result.text;
+      const textContent = Array.isArray(result.text) ? result.text.join('\n') : result.text;
 
       if (!textContent || textContent.trim().length === 0) {
         throw new Error('No text content could be extracted from PDF');
       }
 
       // Clean up the extracted text
-      let cleanedText = textContent
-        .replace(/\r\n/g, '\n')  // Normalize line endings
-        .replace(/\n{3,}/g, '\n\n')  // Remove excessive newlines
+      const cleanedText = textContent
+        .replace(/\r\n/g, '\n') // Normalize line endings
+        .replace(/\n{3,}/g, '\n\n') // Remove excessive newlines
         .trim();
 
-      console.log(`Extracted text from PDF with ${result.totalPages} pages`);
+      logger.info(`Extracted text from PDF with ${result.totalPages} pages`);
 
       return cleanedText;
     } catch (error) {
-      console.error('Error extracting PDF:', error);
-      throw new Error(`Failed to extract PDF content: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error({ err: error }, 'Error extracting PDF');
+      throw new Error(
+        `Failed to extract PDF content: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
