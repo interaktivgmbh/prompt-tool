@@ -5,6 +5,7 @@ import { createChildLogger } from '@/core/logger';
 import { LLMService } from './llm-service';
 import { VectorSearchService } from './vector-search-service';
 import type { ApplyPromptRequest } from '@/schemas/api-schemas';
+import { INSTRUCTION_MODIFICATION_TEMPLATE, formatContextSection } from '@/core/prompt-templates';
 
 const logger = createChildLogger('apply-service');
 
@@ -80,14 +81,17 @@ export class ApplyService {
       }
     }
 
-    // Build the final prompt
-    const systemPrompt = `You are a helpful assistant. The user has provided an instruction prompt that you should follow carefully.
+    // Build the final prompt using sophisticated template
+    const contextSection = formatContextSection(contextText);
 
-Instruction: ${promptText}
+    const systemPrompt = INSTRUCTION_MODIFICATION_TEMPLATE.systemPrompt;
 
-${contextText ? `Additional Context:\n${contextText}\n\n` : ''}Follow the instruction above to process the user's query and text.`;
-
-    const userPrompt = `Query: ${request.query}\n\nText to process:\n${request.text}`;
+    const userPrompt = INSTRUCTION_MODIFICATION_TEMPLATE.userPrompt({
+      instructionPrompt: promptText,
+      userQuery: request.query,
+      textToModify: request.text,
+      contextSection,
+    });
 
     // Generate LLM response
     const llmResponse = await this.llmService.generateResponse({

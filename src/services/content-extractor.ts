@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2025 Interaktiv GmbH
 
+import { extractText } from 'unpdf';
+
 /**
  * Content extractor for different file types
  * Extracts text content from various file formats
@@ -11,6 +13,11 @@ export class ContentExtractor {
    * Extract text content based on MIME type
    */
   async extractText(content: Buffer | string, mimeType: string): Promise<string> {
+    // Handle PDF files
+    if (mimeType === 'application/pdf') {
+      return this.extractPDF(content);
+    }
+
     const contentStr = typeof content === 'string' ? content : content.toString('utf-8');
 
     switch (mimeType) {
@@ -33,6 +40,50 @@ export class ContentExtractor {
           return this.extractPlainText(contentStr);
         }
         throw new Error(`Unsupported MIME type: ${mimeType}`);
+    }
+  }
+
+  /**
+   * Extract text from PDF files using unpdf
+   */
+  private async extractPDF(content: Buffer | string): Promise<string> {
+    try {
+      // Convert string to Buffer if needed
+      const buffer = typeof content === 'string'
+        ? Buffer.from(content, 'binary')
+        : content;
+
+      // Convert Buffer to ArrayBuffer for unpdf
+      const arrayBuffer = new ArrayBuffer(buffer.length);
+      const view = new Uint8Array(arrayBuffer);
+      for (let i = 0; i < buffer.length; ++i) {
+        view[i] = buffer[i] ?? 0;
+      }
+
+      // Extract text from PDF
+      const result = await extractText(arrayBuffer);
+
+      // Handle both string and string[] return types
+      const textContent = Array.isArray(result.text)
+        ? result.text.join('\n')
+        : result.text;
+
+      if (!textContent || textContent.trim().length === 0) {
+        throw new Error('No text content could be extracted from PDF');
+      }
+
+      // Clean up the extracted text
+      let cleanedText = textContent
+        .replace(/\r\n/g, '\n')  // Normalize line endings
+        .replace(/\n{3,}/g, '\n\n')  // Remove excessive newlines
+        .trim();
+
+      console.log(`Extracted text from PDF with ${result.totalPages} pages`);
+
+      return cleanedText;
+    } catch (error) {
+      console.error('Error extracting PDF:', error);
+      throw new Error(`Failed to extract PDF content: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -176,6 +227,7 @@ export class ContentExtractor {
       ts: 'text/plain',
       css: 'text/plain',
       xml: 'text/xml',
+      pdf: 'application/pdf',
     };
 
     return mimeTypes[ext || ''] || 'application/octet-stream';

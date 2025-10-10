@@ -55,7 +55,7 @@ export const listPromptsQuerySchema = z.object({
 // Apply schemas
 export const applyPromptSchema = z.object({
   query: z.string().min(1).max(10000),
-  text: z.string().min(1).max(50000),
+  text: z.string().min(1).max(50000).optional(),
   maxTokens: z.number().int().min(1).max(4000).optional().default(1000),
   temperature: z.number().min(0).max(2).optional().default(0.7),
   includeContext: z.boolean().optional().default(true),
