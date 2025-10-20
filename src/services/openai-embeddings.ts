@@ -3,6 +3,7 @@
 
 import OpenAI from 'openai';
 import { createChildLogger } from '@/core/logger';
+import { appConfig } from '@/config/app-config';
 
 const logger = createChildLogger('openai-embeddings');
 
@@ -17,19 +18,25 @@ export class OpenAIEmbeddingsService {
   private model: string;
 
   constructor(config: OpenAIEmbeddingsConfig = {}) {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const { openai } = appConfig;
+    const { apiKey, baseURL, embeddingModel } = openai;
+
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required');
     }
 
-    this.client = new OpenAI({ apiKey });
+    this.client = new OpenAI({
+      apiKey,
+      baseURL,
+    });
     this.dimensions = config.dimensions || 3072;
-    this.model = config.model || 'text-embedding-3-large';
+    this.model = config.model || embeddingModel;
 
     logger.info(
       {
         model: this.model,
         dimensions: this.dimensions,
+        baseURL,
       },
       'OpenAI embeddings service initialized'
     );

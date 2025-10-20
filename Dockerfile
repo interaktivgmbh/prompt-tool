@@ -66,4 +66,4 @@ EXPOSE 3005
 
 # Push schema changes and start the application
 # Using db:push instead of db:migrate to handle existing tables gracefully
-CMD ["sh", "-c", "bun run db:push --force && bun run src/index.ts"]
+CMD ["sh", "-c", "bun run db:push --force && bun run start"]

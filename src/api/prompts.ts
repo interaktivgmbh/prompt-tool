@@ -20,6 +20,7 @@ import { getNextCloudStorage } from '@/services/nextcloud-storage';
 import { ContentExtractor } from '@/services/content-extractor';
 import { ApplyService } from '@/services/apply-service';
 import { AVAILABLE_MODELS } from '@/config/models';
+import { appConfig } from '@/config/app-config';
 
 export const promptsRouter = Router();
 
@@ -39,7 +40,7 @@ const applyService = new ApplyService({ useMock: false });
 promptsRouter.get('/models', (_req, res) => {
   res.json({
     models: AVAILABLE_MODELS,
-    defaultModel: process.env.DEFAULT_MODEL || 'openai/gpt-4o-mini',
+    defaultModel: appConfig.openai.defaultModelId,
   });
 });
 

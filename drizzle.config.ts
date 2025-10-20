@@ -2,13 +2,14 @@
 // Copyright 2025 Interaktiv GmbH
 
 import { defineConfig } from 'drizzle-kit';
+import { appConfig } from './src/config/app-config';
 
 export default defineConfig({
   schema: './src/core/schema.ts',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/prompt_db',
+    url: appConfig.database.url,
   },
   verbose: true,
   strict: true,

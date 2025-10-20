@@ -3,10 +3,14 @@
 
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { appConfig } from '@/config/app-config';
 import * as schema from './schema';
 
-// Connection string from environment (will be set via config later)
-const connectionString = process.env.DATABASE_URL || '';
+const connectionString = appConfig.database.url;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL must be configured');
+}
 
 // Create postgres client
 export const client = postgres(connectionString, {

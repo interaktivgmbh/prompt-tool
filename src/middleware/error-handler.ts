@@ -4,6 +4,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { logger } from '@/core/logger';
 import { ZodError } from 'zod';
+import { appConfig } from '@/config/app-config';
 
 export class AppError extends Error {
   constructor(
@@ -60,7 +61,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   // Default error response
   return res.status(500).json({
     error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    message: appConfig.runtime.isDevelopment ? err.message : undefined,
   });
 };
 

@@ -3,7 +3,8 @@
 
 import OpenAI from 'openai';
 import { createChildLogger } from '@/core/logger';
-import { getDefaultModel, getModelById } from '@/config/models';
+import { appConfig } from '@/config/app-config';
+import { getModelById, normalizeModelId } from '@/config/models';
 
 const logger = createChildLogger('llm-service');
 
@@ -31,24 +32,21 @@ export class LLMService {
   private defaultModel: string;
 
   constructor() {
-    // Use OpenRouter API
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const { openai } = appConfig;
+    const { apiKey, baseURL, defaultModel } = openai;
+
     if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY environment variable is required');
+      throw new Error('OPENAI_API_KEY environment variable is required');
     }
 
     this.client = new OpenAI({
       apiKey,
-      baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: {
-        'HTTP-Referer': 'https://github.com/kyra-prompt-tool',
-        'X-Title': 'Kyra Prompt Tool',
-      },
+      baseURL,
     });
 
-    this.defaultModel = getDefaultModel().id;
+    this.defaultModel = defaultModel.id;
 
-    logger.info({ model: this.defaultModel }, 'LLM service initialized with OpenRouter');
+    logger.info({ model: this.defaultModel, baseURL }, 'LLM service initialized with OpenAI');
   }
 
   async generateResponse(request: LLMRequest): Promise<LLMResponse> {
@@ -61,10 +59,15 @@ export class LLMService {
       model = this.defaultModel,
     } = request;
 
-    // Validate model exists
-    const modelConfig = getModelById(model);
+    const normalizedModel = normalizeModelId(model) || this.defaultModel;
+    const modelConfig = getModelById(normalizedModel);
+    const modelToUse = modelConfig?.id || normalizedModel;
+
     if (!modelConfig) {
-      logger.warn({ model }, 'Unknown model, using default');
+      logger.warn(
+        { requestedModel: model, normalizedModel },
+        'Using provided model without catalog entry'
+      );
     }
 
     // Build the messages array
@@ -91,7 +94,7 @@ export class LLMService {
 
     logger.info(
       {
-        model,
+        model: modelToUse,
         provider: modelConfig?.provider,
         messageCount: messages.length,
         maxTokens,
@@ -102,7 +105,7 @@ export class LLMService {
 
     try {
       const completion = await this.client.chat.completions.create({
-        model,
+        model: modelToUse,
         messages,
         max_tokens: maxTokens,
         temperature,
@@ -135,7 +138,10 @@ export class LLMService {
         model: completion.model,
       };
     } catch (error) {
-      logger.error({ error, model }, 'Failed to generate LLM response');
+      logger.error(
+        { error, requestedModel: model, normalizedModel, modelToUse },
+        'Failed to generate LLM response'
+      );
       throw error;
     }
   }

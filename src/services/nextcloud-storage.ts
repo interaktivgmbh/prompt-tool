@@ -3,6 +3,7 @@
 
 import { createClient, type WebDAVClient, type FileStat } from 'webdav';
 import { createChildLogger } from '@/core/logger';
+import { appConfig } from '@/config/app-config';
 
 const logger = createChildLogger('nextcloud-storage');
 
@@ -203,11 +204,7 @@ let storageInstance: NextCloudStorage | null = null;
 
 export function getNextCloudStorage(): NextCloudStorage {
   if (!storageInstance) {
-    const url = process.env.NEXTCLOUD_URL || 'http://localhost:8080';
-    const username = process.env.NEXTCLOUD_USERNAME || 'admin';
-    const password = process.env.NEXTCLOUD_PASSWORD || 'admin123';
-    const basePath = process.env.NEXTCLOUD_BASE_PATH || '/prompts';
-
+    const { url, username, password, basePath } = appConfig.nextcloud;
     storageInstance = new NextCloudStorage(url, username, password, basePath);
   }
 

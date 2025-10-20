@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2025 Interaktiv GmbH
 
-import { config } from 'dotenv';
 import { createApp } from '@/app';
 import { logger } from '@/core/logger';
 import { testConnection, closeDatabase } from '@/core/database';
+import { appConfig } from '@/config/app-config';
 
-// Load environment variables
-config();
-
-const PORT = parseInt(process.env.PORT || '3005');
-const HOST = process.env.HOST || '0.0.0.0';
+const {
+  server: { port: PORT, host: HOST },
+} = appConfig;
 
 async function startServer() {
   try {
@@ -28,7 +26,7 @@ async function startServer() {
     // Create and start Express app
     const app = createApp();
 
-    const server = app.listen(PORT, HOST as string, () => {
+    const server = app.listen(PORT, HOST, () => {
       logger.info(`🚀 Server running at http://${HOST}:${PORT}`);
       logger.info(`📊 Health check: http://${HOST}:${PORT}/health`);
     });

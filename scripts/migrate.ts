@@ -4,8 +4,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
+import { appConfig } from '../src/config/app-config';
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/prompt_db';
+const connectionString = appConfig.database.url;
 
 async function runMigration() {
   const sql = postgres(connectionString, { max: 1 });
