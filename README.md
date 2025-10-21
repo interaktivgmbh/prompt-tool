@@ -164,6 +164,20 @@ curl -X POST http://localhost:3005/api/prompts/{prompt-id}/apply \
 - **LLM**: OpenAI (GPT-4o family)
 - **ORM**: Drizzle ORM
 
+## Versioning & Releases
+
+- We follow [Semantic Versioning](https://semver.org/) starting at `0.1.0`; bump
+  `MAJOR` for breaking API changes, `MINOR` for backward-compatible features, and
+  `PATCH` for fixes.
+- Each release is tagged in git as `vMAJOR.MINOR.PATCH` and produces matching
+  Docker images (`prompt-tool:MAJOR.MINOR.PATCH`, `MAJOR.MINOR`, `MAJOR`) plus a
+  convenience `prompt-tool:latest` tag pointing at the newest successful release.
+- Use explicit versioned tags in production deployments; treat `latest` as
+  best-effort preview only.
+- Keep release notes alongside the tag (for example in the git tag annotation or
+  a changelog entry) so consumers can see exactly what changed. See
+  [`CHANGELOG.md`](./CHANGELOG.md) for the release history.
+
 ## Troubleshooting
 
 **Database connection fails**

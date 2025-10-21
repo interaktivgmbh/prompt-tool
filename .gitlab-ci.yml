@@ -33,11 +33,29 @@ docker_prompt_tool:
   script:
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE:$BRANCH_TAG" .
     - |
-      if [ "$CI_COMMIT_REF_NAME" = "master" ]; then
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        VERSION="${CI_COMMIT_TAG#v}"
+        MAJOR=$(echo "$VERSION" | cut -d. -f1)
+        MINOR=$(echo "$VERSION" | cut -d. -f2)
+
+        if [ -z "$MAJOR" ] || [ -z "$MINOR" ]; then
+          echo "Invalid semantic version tag: $CI_COMMIT_TAG"
+          exit 1
+        fi
+
+        docker tag "$CI_REGISTRY_IMAGE:$BRANCH_TAG" "$CI_REGISTRY_IMAGE:$VERSION"
+        docker tag "$CI_REGISTRY_IMAGE:$BRANCH_TAG" "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR"
+        docker tag "$CI_REGISTRY_IMAGE:$BRANCH_TAG" "$CI_REGISTRY_IMAGE:$MAJOR"
         docker tag "$CI_REGISTRY_IMAGE:$BRANCH_TAG" "$CI_REGISTRY_IMAGE:latest"
+
+        docker push "$CI_REGISTRY_IMAGE:$BRANCH_TAG"
+        docker push "$CI_REGISTRY_IMAGE:$VERSION"
+        docker push "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR"
+        docker push "$CI_REGISTRY_IMAGE:$MAJOR"
         docker push "$CI_REGISTRY_IMAGE:latest"
+      else
+        docker push "$CI_REGISTRY_IMAGE:$BRANCH_TAG"
       fi
-    - docker push "$CI_REGISTRY_IMAGE:$BRANCH_TAG"
   only:
     - master
     - tags
